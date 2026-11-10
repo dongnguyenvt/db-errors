@@ -138,8 +138,12 @@ func TestTranslate547IgnoresMessage(t *testing.T) {
 }
 
 func TestTranslateUnknownServerError(t *testing.T) {
-	if got := Translate(serverErr(999999, "unknown")); got != nil {
-		t.Errorf("Translate(unknown number) = %v, want nil", got)
+	got := Translate(serverErr(999999, "unknown"))
+	if got == nil || got.Code != dberrors.CodeUnknown || got.Driver != Driver || got.NativeCode != "999999" {
+		t.Fatalf("Translate(unknown number) = %+v, want unknown with native code 999999", got)
+	}
+	if !errors.Is(got, dberrors.ErrUnknown) {
+		t.Errorf("errors.Is(result, ErrUnknown) = false, want true")
 	}
 }
 

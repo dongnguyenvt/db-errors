@@ -103,8 +103,12 @@ func TestTranslateWrappedPgError(t *testing.T) {
 }
 
 func TestTranslateUnknownPgError(t *testing.T) {
-	if got := Translate(pgErr("XX000", "internal")); got != nil {
-		t.Errorf("Translate(unknown SQLSTATE) = %v, want nil", got)
+	got := Translate(pgErr("XX000", "internal"))
+	if got == nil || got.Code != dberrors.CodeUnknown || got.Driver != Driver || got.NativeCode != "XX000" {
+		t.Fatalf("Translate(unknown SQLSTATE) = %+v, want unknown with native code XX000", got)
+	}
+	if !errors.Is(got, dberrors.ErrUnknown) {
+		t.Errorf("errors.Is(result, ErrUnknown) = false, want true")
 	}
 }
 

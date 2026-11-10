@@ -41,6 +41,10 @@ const (
 	CodeUndefinedTable       Code = "undefined_table"
 	CodeUndefinedColumn      Code = "undefined_column"
 	CodeSyntaxError          Code = "syntax_error"
+	// CodeUnknown is a database server error that the driver reported but
+	// that this package has no mapping for. The native code is kept in
+	// Error.NativeCode. Unknown errors are not retried automatically.
+	CodeUnknown Code = "unknown"
 )
 
 // Error is a translated database error. It keeps the original driver error
@@ -80,6 +84,7 @@ var (
 	ErrUndefinedTable       = &Error{Code: CodeUndefinedTable}
 	ErrUndefinedColumn      = &Error{Code: CodeUndefinedColumn}
 	ErrSyntaxError          = &Error{Code: CodeSyntaxError}
+	ErrUnknown              = &Error{Code: CodeUnknown}
 )
 
 // Error implements the error interface.

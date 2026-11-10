@@ -60,6 +60,7 @@ The original driver error is kept and reachable through `errors.Unwrap`.
 | `undefined_table` | `ErrUndefinedTable` | 42P01 | 208 |
 | `undefined_column` | `ErrUndefinedColumn` | 42703 | 207 |
 | `syntax_error` | `ErrSyntaxError` | 42601 | 102, 156 |
+| `unknown` | `ErrUnknown` | any other SQLSTATE | any other error number |
 
 SQL Server error 547 covers foreign-key, check, and other constraint conflicts.
 The error number cannot tell them apart, and the message text is localised, so
@@ -74,8 +75,11 @@ throttling and resource-governance errors (40501, 49918, 49919, 49920, 10928,
 `query_canceled` is only produced from PostgreSQL. SQL Server reports
 cancellation through `context` errors, which are not database errors.
 
-Unrecognised errors are left unchanged. Only errors with a mapped native code
-are translated.
+A server error from a driver that has no mapping becomes `unknown`. Its native
+code is kept in `NativeCode`, and the original error is still reachable through
+`errors.Unwrap`. Errors that are not server errors from a driver, such as
+context errors or network errors that are not `driver.ErrBadConn`, are left
+unchanged.
 
 ## Tests
 

@@ -54,7 +54,7 @@ func Translate(err error) *dberrors.Error {
 
 	code, ok := Classify(serverErr.Number)
 	if !ok {
-		return nil
+		code = dberrors.CodeUnknown
 	}
 	return &dberrors.Error{
 		Code:       code,

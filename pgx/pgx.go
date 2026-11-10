@@ -36,7 +36,7 @@ func Translate(err error) *dberrors.Error {
 	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr != nil {
 		code, ok := classify(pgErr.Code)
 		if !ok {
-			return nil
+			code = dberrors.CodeUnknown
 		}
 		return &dberrors.Error{
 			Code:       code,
