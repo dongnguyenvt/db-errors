@@ -10,7 +10,7 @@ import (
 	"errors"
 	"strings"
 
-	dberrors "db-errors"
+	dberrors "github.com/dongnguyenvt/db-errors"
 
 	pgconn "github.com/jackc/pgx/v5/pgconn"
 )

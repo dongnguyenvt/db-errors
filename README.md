@@ -13,9 +13,9 @@ sub-package, so you only import the drivers you use.
 import (
     "errors"
 
-    dberrors "db-errors"
-    "db-errors/mssql"
-    dbpgx "db-errors/pgx"
+    dberrors "github.com/dongnguyenvt/db-errors"
+    "github.com/dongnguyenvt/db-errors/mssql"
+    dbpgx "github.com/dongnguyenvt/db-errors/pgx"
 )
 
 err := db.ExecContext(ctx, query, args...)

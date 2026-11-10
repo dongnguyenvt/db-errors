@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	dberrors "db-errors"
+	dberrors "github.com/dongnguyenvt/db-errors"
 
 	gomssql "github.com/microsoft/go-mssqldb"
 )
