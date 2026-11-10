@@ -1,6 +1,7 @@
 package dberrors
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"testing"
@@ -234,5 +235,38 @@ func TestTranslateLeavesAlreadyTranslatedErrors(t *testing.T) {
 	wrapped := fmt.Errorf("layer: %w", translated)
 	if got := Translate(wrapped, stub); got != wrapped {
 		t.Errorf("Translate on wrapped translated error = %v, want unchanged", got)
+	}
+}
+
+func TestTranslateNoRowsIsNotFound(t *testing.T) {
+	got := Translate(fmt.Errorf("lookup: %w", sql.ErrNoRows))
+	var de *Error
+	if !errors.As(got, &de) || de.Code != CodeNotFound {
+		t.Fatalf("Translate(ErrNoRows) = %v, want not_found", got)
+	}
+	if !errors.Is(got, ErrNotFound) {
+		t.Errorf("errors.Is(result, ErrNotFound) = false, want true")
+	}
+	if !errors.Is(got, sql.ErrNoRows) {
+		t.Errorf("errors.Is(result, sql.ErrNoRows) = false, want true")
+	}
+}
+
+func TestTranslateNoRowsAdapterFirst(t *testing.T) {
+	// An adapter that recognises the error wins over the generic not-found mapping.
+	want := &Error{Code: CodeDeadlock, Driver: "stub"}
+	got := Translate(sql.ErrNoRows, &stubAdapter{result: want})
+	if got != want {
+		t.Errorf("Translate = %v, want adapter result", got)
+	}
+}
+
+func TestOriginalReturnsDriverText(t *testing.T) {
+	e := &Error{Code: CodeUniqueViolation, Driver: "mssql", NativeCode: "2627", Message: "translated", Err: errors.New("raw driver text")}
+	if got := e.Original(); got != "raw driver text" {
+		t.Errorf("Original() = %q, want %q", got, "raw driver text")
+	}
+	if got := (&Error{Code: CodeDeadlock}).Original(); got != "" {
+		t.Errorf("Original() with no Err = %q, want empty", got)
 	}
 }

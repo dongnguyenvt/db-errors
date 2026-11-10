@@ -10,6 +10,7 @@ import (
 
 	dberrors "github.com/dongnguyenvt/db-errors"
 
+	pgx "github.com/jackc/pgx/v5"
 	pgconn "github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -157,5 +158,13 @@ func TestEndToEndWithRoot(t *testing.T) {
 	}
 	if errors.Is(err, dberrors.ErrUniqueViolation) {
 		t.Errorf("foreign key violation must not match unique violation")
+	}
+}
+
+func TestTranslateNoRowsIsNotFound(t *testing.T) {
+	// pgx.ErrNoRows wraps sql.ErrNoRows, so the root package maps it.
+	got := dberrors.Translate(pgx.ErrNoRows, Adapter{})
+	if !errors.Is(got, dberrors.ErrNotFound) {
+		t.Errorf("Translate(pgx.ErrNoRows) = %v, want not_found", got)
 	}
 }

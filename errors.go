@@ -9,6 +9,7 @@
 package dberrors
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 )
@@ -45,6 +46,9 @@ const (
 	// that this package has no mapping for. The native code is kept in
 	// Error.NativeCode. Unknown errors are not retried automatically.
 	CodeUnknown Code = "unknown"
+	// CodeNotFound means a query that expected a row returned none. It is
+	// produced from sql.ErrNoRows, which pgx and go-mssqldb also return.
+	CodeNotFound Code = "not_found"
 )
 
 // Error is a translated database error. It keeps the original driver error
@@ -85,6 +89,7 @@ var (
 	ErrUndefinedColumn      = &Error{Code: CodeUndefinedColumn}
 	ErrSyntaxError          = &Error{Code: CodeSyntaxError}
 	ErrUnknown              = &Error{Code: CodeUnknown}
+	ErrNotFound             = &Error{Code: CodeNotFound}
 )
 
 // Error implements the error interface.
@@ -109,6 +114,16 @@ func (e *Error) Error() string {
 // Unwrap returns the original driver error.
 func (e *Error) Unwrap() error { return e.Err }
 
+// Original returns the text of the untranslated driver error, which is what
+// the error printed before translation. Use it to keep an existing message
+// format in a wrapper. It returns "" when there is no original error.
+func (e *Error) Original() string {
+	if e.Err == nil {
+		return ""
+	}
+	return e.Err.Error()
+}
+
 // Is reports whether target is a *Error with the same Code. A target with an
 // empty Driver matches errors from any driver, which is what the sentinels rely on.
 func (e *Error) Is(target error) bool {
@@ -128,8 +143,9 @@ type Adapter interface {
 
 // Translate converts err using the first adapter that recognises it.
 //
-// It returns nil for a nil err. If err is already a *Error, or no adapter
-// recognises it, err is returned unchanged.
+// It returns nil for a nil err. If err is already a *Error, err is returned
+// unchanged. An error that matches sql.ErrNoRows becomes CodeNotFound. If no
+// adapter recognises any other error, err is returned unchanged.
 func Translate(err error, adapters ...Adapter) error {
 	if err == nil {
 		return nil
@@ -144,6 +160,9 @@ func Translate(err error, adapters ...Adapter) error {
 		if t := a.Translate(err); t != nil {
 			return t
 		}
+	}
+	if errors.Is(err, sql.ErrNoRows) {
+		return &Error{Code: CodeNotFound, Err: err}
 	}
 	return err
 }

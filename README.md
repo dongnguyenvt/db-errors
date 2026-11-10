@@ -38,6 +38,10 @@ if errors.As(err, &de) {
 recognises it, and never double-translates an error it has already converted.
 The original driver error is kept and reachable through `errors.Unwrap`.
 
+`Error.Original()` returns the text the driver error had before translation.
+The `Error()` text is `code (driver native): message`. To keep an older
+message format, print `Original()` from a local wrapper.
+
 ## Portable codes
 
 | Code | Sentinel | PostgreSQL (SQLSTATE) | SQL Server (error number) |
@@ -61,6 +65,7 @@ The original driver error is kept and reachable through `errors.Unwrap`.
 | `undefined_column` | `ErrUndefinedColumn` | 42703 | 207 |
 | `syntax_error` | `ErrSyntaxError` | 42601 | 102, 156 |
 | `unknown` | `ErrUnknown` | any other SQLSTATE | any other error number |
+| `not_found` | `ErrNotFound` | — (from `sql.ErrNoRows`, which pgx also returns) | — (same) |
 
 SQL Server error 547 covers foreign-key, check, and other constraint conflicts.
 The error number cannot tell them apart, and the message text is localised, so
